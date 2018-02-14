@@ -1,0 +1,417 @@
+---
+# Notes apt switches present, latest ,absent, build-dep
+# Notes SELINUX switches  enforcing, permissive, disabled
+# Notes service switches  started,stopped,restarted,killed,reloaded,once
+# Notes service more switches enabled "yes or no" whether the serverice should start on boot
+
+- name: install and configure NIS automounter and other items for Debian Stretch
+  hosts: test
+  remote_user: root
+
+  tasks:
+
+  - name: test connection
+    ping:
+
+  - name: copy /etc/apt/sources.list to /etc/apt/sources.list.old
+    command: cp /etc/apt/sources.list /etc/apt/sources.list.old
+
+  - name: comment out deb cdrom Official amd64 DVD in /etc/apt/sources.list , then dvd will not be needed to be mounted to install packages
+    lineinfile: dest=/etc/apt/sources.list regexp="^deb cdrom:*" insertbefore="^deb cdrom" line="#"
+
+  - name: Run the equivalent of apt-get update
+    command: apt-get update
+
+  - name: copy default domain
+    copy: src=/etc/ansible/debian-stretch/defaultdomain dest=/etc/defaultdomain
+
+  - name: install gcc if not already there
+    apt: name=gcc state=present
+
+  - name: install autofs
+    apt: name=autofs state=present
+
+  - name: install nis
+    apt: name=nis state=present
+
+  - name: copy nsswitch.conf over
+    copy: src=/etc/ansible/debian-stretch/nsswitch.conf dest=/etc/nsswitch.conf
+
+  - name: add granite and sapphire2 to /etc/hosts
+    lineinfile: dest=/etc/hosts line="10.1.1.32  sapphire2"
+
+  - name: add granite to /etc/hosts
+    lineinfile: dest=/etc/hosts line="10.1.1.6   granite"
+
+  - name: add YP.sonusnet.com /etc/defaultdomain
+    lineinfile: dest=/etc/defaultdomain line="YP.sonusnet.com"
+
+  - name: copy over new /etc/auto.master for NIS to work
+    copy: src=/etc/ansible/debian-stretch/auto.master dest=/etc/auto.master
+
+  - name: add domain YP.sonusnet.com server 10.1.1.6 to /etc/yp.conf
+    lineinfile: dest=/etc/yp.conf line="domain YP.sonusnet.com server 10.1.1.6"
+
+# - name: change input in /etc/group from 101 to 129 *** this will fix oracle sudo issuse
+#   lineinfile: dest=/etc/group regexp="^input:x:" insertafter=":101" line="input:x:129:"
+
+  - name: copy over new /etc/group for sudo issuse with Oracle
+    copy: src=/etc/ansible/debian-jessie/group dest=/etc/group
+
+  - name: add dns=none to /etc/NetworkManager/NetworkManager.conf to keep NetworkManager from overwriting /etc/resolv.conf
+    lineinfile: dest=/etc/NetworkManager/NetworkManager.conf insertafter="^plugins=ifupdown,keyfile" line="dns=none"
+
+  - name: copy /etc/resolv.conf over
+    copy: src=/etc/ansible/debian-stretch/resolv.conf dest=/etc/resolv.conf
+
+  - name: install build dependencies for package ntp
+    apt: name=ntp state=build-dep
+
+  - name: install ntp   *******************************
+    apt: name=ntp state=present
+
+  - name: reboot system
+    shell: sleep 2 && shutdown -r now "reboot to setup NIS"
+    async: 1
+    poll: 0
+    ignore_errors: true
+
+  - name: waiting for server to come back online waiting 200 seconds
+    local_action: wait_for host={{ inventory_hostname }} state=started delay=45 timeout=125
+    sudo: false
+
+  - name: for PERFORCE, create sybolic link "ln -s /sonus/p4/bin/p4_64 /usr/local/bin/p4"
+    file: src=/sonus/p4/bin/p4_64 dest=/usr/local/bin/p4 owner=root group=staff state=link
+
+  - name: install meld "a visual diff and merge tool"
+    apt: name=meld state=present
+
+  - name: install tcsh
+    apt: name=tcsh state=present
+
+  - name: install xemacs "xemacs21"
+    apt: name=xemacs21 state=present
+
+  - name: install xsltproc "xsltproc is a command line tool for applying XSLT stylesheets to XML documents"
+    apt: name=xsltproc state=present
+
+  - name: Install multiple packages list from Pavan in one shot, over 60 packages
+    apt: name={{item}} state=present
+    with_items:
+    - libacl1
+    - libaio1
+    - libapr1
+    - libaprutil1
+    - libarchive-dev
+    - libarchive13
+    - libacl1
+    - libaio1
+    - libapr1
+    - libaprutil1
+    - libarchive-dev
+    - libarchive13
+    - libattr1
+    - libbz2-1.0
+    - libcap2
+    - libcap-dev
+    - libdb5.3-dev
+    - libdb5.3
+    - libexpat1
+    - libgcrypt20-dev
+    - libgcrypt20
+    - libgdbm-dev
+    - libgdbm3
+    - libgpg-error-dev
+    - libgpg-error0
+    - libglib2.0-0
+#    - libicu57
+    - libldap-2.4-2
+    - libldap2-dev
+    - libltdl7
+    - liblzma5
+    - libnetfilter-log1
+    - libnetfilter-queue1
+#    - libnettle6
+#    - libopenhpi-dev
+#    - libopenhpi3
+#    - libpam0g-dev
+    - libpam0g
+    - libpcap0.8
+    - libpcap0.8-dev
+#    - libpcre3-dev
+    - libsctp1
+    - libsctp-dev
+    - libsqlite3-0
+    - libsqlite3-dev
+    - libuuid1
+    - libxalan-c111
+    - libxalan-c-dev
+    - libxerces-c3.1
+    - libxerces-c-dev
+    - libxml2
+    - libxml2-dev
+    - zlib1g
+    - zlib1g-dev
+    - libcomerr2
+
+  - name: install htop
+    apt: name=htop state=present
+
+  - name: change systemd-journal from 101 to 225 in /etc/group to fix NIS conflict
+    lineinfile: dest=/etc/group regexp="^systemd-journal*" insertafter="^systemd-journal" line="systemd-journal:x:225:"
+
+  - name: Install multiple packages new list added 12-14-2016 in one shot, 52  packages
+    apt: name={{item}} state=present
+    with_items:
+    - strace
+    - ksh
+    - flex
+    - bison
+    - openjdk-7-jdk
+    - valgrind
+    - libnfnetlink-dev
+    - python-dev
+    - astyle
+    - libgcrypt11-dev
+    - libxml2
+    - libxml2-dev
+    - comerr-dev
+    - libselinux1
+    - libkeyutils1
+    - libkrb5support0
+    - libkrb5-3
+    - libgssapi-krb5-2
+    - libk5crypto3
+    - zlib1g
+    - zlib1g-dev
+    - libgssrpc4
+#    - libkdb5-8
+    - krb5-multidev
+    - libkrb5-dev
+    - libssl-dev
+    - aspectj
+    - dos2unix
+    - libnetfilter-queue-dev
+- diffuse
+    - dnsutils
+    - rpm
+    - g++
+#    - g++-6
+    - gawk
+    - libnetfilter-log-dev
+    - libstdc++5
+    - ddd
+    - liblzma-dev
+    - vim
+    - emacs
+    - libmail-sendmail-perl
+    - bsd-mailx
+    - sudo
+    - tightvncserver
+    - fakeroot
+    - libjson-perl
+    - autoconf
+    - libsystemd-dev
+    - libexpect-perl
+    - git
+    - simple-cdd
+
+  - name: Install multiple packages new additions , added snmp 12-1-2017 ******************
+    apt: name={{item}} state=present
+    with_items:
+    - libncurses5-dev
+    - expect
+    - screen
+    - gedit
+    - devscripts
+    - debhelper
+    - pbuilder
+    - cowbuilder
+    - lcov
+    - iftop
+    - moreutils
+    - tclsh
+    - snmp
+
+  - name: copy environment file to /etc to fix locale, should be LC_ALL=en_US.UTF-8  can check with the command locale
+    copy: src=/etc/ansible/debian-jessie/environment dest=/etc/environment
+
+  - name: unset locale  using command  update-locale LC_ALL=""
+    command: update-locale LC_ALL=""
+
+  - name: stop NIS so Oracle account can be created and not be blocked by NIS
+    command: service nis stop
+
+  - name: create directory using ansible module file for /export/home
+    file: path=/export/home state=directory
+
+  - name: add groupadd -g 1000 dba
+    group: name=dba gid=1000 state=present
+
+  - name: creating oracle account and local home directory
+    user: name=oracle group=dba uid=1000 home=/export/home/oracle password=$6$MWT4dtwI$eihgIn2d.E8ngni1rDVasbPU7JLplBNtptVFQbKw0raJBGqh3SomT0tGyBM/2Km2CuO4o3l93B7kcQaBvKtEq. state=present
+
+  - name: create directory /export/home/oracle/product and make oracle owner and set group to dba
+    file: path=/export/home/oracle/product owner=oracle group=dba state=directory
+
+  - name: create symbolic link from 10.2.0 to /home/oraadmin/shared/product/10.2.0
+    file: src=/home/oraadmin/shared/product/10.2.0 dest=/export/home/oracle/product/10.2.0 force=yes owner=oracle group=dba state=link
+
+  - name: create symbolic link from 11.2.0 to /home/oraadmin/shared/product/11.2.0
+    file: src=/home/oraadmin/shared/product/11.2.0 dest=/export/home/oracle/product/11.2.0 force=yes owner=oracle group=dba state=link
+
+  - name: copy over sudoers to /etc
+    copy: src=/etc/ansible/debian-jessie/sudoers dest=/etc/sudoers
+
+  - name: start NIS backup now that Orcale has been setup
+    command: service nis start
+
+  - name: create the following Oracle directory oraadmin
+    file: path=/export/home/oraadmin owner=oracle group=dba state=directory
+
+  - name: create the following directory /export/home/oradata
+    file: path=/export/home/oradata owner=oracle group=dba state=directory
+
+  - name: create the following directory /export/home/oraidx
+    file: path=/export/home/oraidx owner=oracle group=dba state=directory
+
+  - name: create the following directory /export/home/orasql
+    file: path=/export/home/orasql owner=oracle group=dba state=directory
+
+  - name: create the following directory /export/home/orasys
+    file: path=/export/home/orasys owner=oracle group=dba state=directory
+
+  - name: create the following directory /export/home/oracle/product/local/dbs
+    file: path=/export/home/oracle/product/local/dbs owner=oracle group=dba state=directory
+
+  - name: create the following directory /export/home/oracle/product/local/rdbms/audit
+    file: path=/export/home/oracle/product/local/rdbms/audit owner=oracle group=dba state=directory
+
+  - name: create the following directory /export/home/oracle/product/local/network/admin
+    file: path=/export/home/oracle/product/local/network/admin owner=oracle group=dba state=directory
+
+ # - name: install linux-headers Note this version might change with newer OS "Stretch" releases
+ #   apt: name=linux-headers-4.8.0-1-amd64 state=present
+
+  - name: run the script dash-to-bash-script , Note this will switch default shell from dash to bash, Note got syntax from Howard 10-14-2016
+    script: /etc/ansible/debian-jessie/dash-to-bash-script
+
+  - name: create symbolic link from /usr/bin/make to /usr/bin/gmake , so gmake points to make
+    file: src=/usr/bin/make dest=/usr/bin/gmake owner=root group=root state=link
+
+  - name: DOCKER start of setup --- Run the equivalent of apt-get update
+    command: apt-get update
+
+  - name: install apt-transport-https ca-certificates for DOCKER install
+    apt: name={{item}} state=present
+    with_items:
+    - apt-transport-https
+    - ca-certificates
+
+  - name: add the new GPG key for docker install apt-transport-https and ca-certificates
+    apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
+
+  - name: DOCKER install create /etc/apt/sources.list.d/docker.list if it does not exist
+    file: path=/etc/apt/sources.list.d/docker.list owner=root group=root state=touch
+
+  - name: for Docker add the line "deb https://apt.dockerproject.org/repo debian-stretch main" to /etc/apt/sources.list.d/docker.list
+    lineinfile: dest=/etc/apt/sources.list.d/docker.list line="deb https://apt.dockerproject.org/repo debian-jessie main"
+
+  - name: DOCKER start of setup --- Run the equivalent of apt-get update Note this the second run for Docker setup
+    command: apt-get update
+
+  - name: DOCKER install DOCKER **************
+    apt: name=docker-engine state=present
+
+  - name: DOCKER Start the docker daemon
+    command: service docker start
+
+# NOTE the below line worked on Deiban Stretch, but on Debian Jessie it give a permission issuse for my account
+#  - name: addng existing users to the group docker in /etc/group,  Giving non-root access to docker so sudo rights are not needed for user accounts in this group
+#    action: user name=erobinson groups="docker" append=yes
+
+#  - name: Install packport kernel 4.8.0
+#    apt:
+#      name: linux-image-4.9.0-0.bpo.2-amd64
+#      default_release: jessie-backports
+#      state: present
+
+  - name: copy locale.gen to /etc  This should fix locale issue with PERL  efr 6-26-2017
+    copy: src=/etc/ansible/debian-jessie/locale.gen dest=/etc/locale.gen
+
+  - name: run locale-gen to generate the locales settings
+    command: /usr/sbin/locale-gen
+
+  - name: create symbolic link for Orale 12.1.0  added 8-29-2017
+    file: src=/home/oraadmin/shared/product/12.1.0 dest=/export/home/oracle/product/12.1.0 force=yes owner=oracle group=dba state=link
+
+  - name: create the following Oracle directory /export/home/oracle/product/local/rdbms/log    efr 9-20-2017
+    file: path=/export/home/oracle/product/local/rdbms/log owner=oracle group=dba state=directory
+
+  - name: copy librest-client-perl_273-1_all.deb to /root on local host
+    copy: src=/root/librest-client-perl_273-1_all.deb  dest=/root
+
+  - name: install librest-client-perl_273-1_all.deb using local source
+    apt: deb=/root/librest-client-perl_273-1_all.deb state=present
+
+# got script from https://deb.nodesource.com/setup_7.x
+  - name: run the script /etc/ansible/debian-jessie/nodejs-script-jessie  "This will setup the repos for NodeSource, nodejs"
+    script: /etc/ansible/debian-jessie/nodejs-script-jessie
+
+  - name: install nodejs using apt module
+    apt: name=nodejs state=present
+
+  - name: npm install -g typescript@2.3.4
+    command: /usr/bin/npm install -g typescript@2.3.4
+
+  - name: npm install -g @angular/cli@1.1.1
+    command: /usr/bin/npm install -g @angular/cli@1.1.1
+
+  - name: copy simple-cdd_0.5.0sonus1_all.deb to /root on local host   added 10-10-2017
+    copy: src=/etc/ansible/debian-jessie/simple-cdd_0.5.0sonus1_all.deb dest=/root
+
+  - name: install simple-cdd_0.5.0sonus1_all.deb to make changes to simple-cdd "simple-cdd is used to create a customized debian-installer CD" added 10-10-2017
+    apt: deb=/root/simple-cdd_0.5.0sonus1_all.deb state=present
+
+  - name: copy libpq5_9.6.3-1.pgdg80+1_amd64.deb for postgresql 11-7-2017
+    copy: src=/etc/ansible/debian-jessie/postgresql-files/libpq5_9.6.3-1.pgdg80+1_amd64.deb dest=/var/cache/apt/archives
+
+  - name: install libpq5_9.6.3-1.pgdg80+1_amd64.deb from local source 11-7-2017
+    apt: deb=/var/cache/apt/archives/libpq5_9.6.3-1.pgdg80+1_amd64.deb state=present
+
+  - name: copy pgdg-keyring_2017.1_all.deb for postgresql 11-7-2017
+    copy: src=/etc/ansible/debian-jessie/postgresql-files/pgdg-keyring_2017.1_all.deb dest=/var/cache/apt/archives
+
+  - name: install pgdg-keyring_2017.1_all.deb from local source 11-7-2017
+    apt: deb=/var/cache/apt/archives/pgdg-keyring_2017.1_all.deb state=present
+
+  - name: copy postgresql-client-common_184.pgdg80+1_all.deb for postgresql 11-7-2017
+    copy: src=/etc/ansible/debian-jessie/postgresql-files/postgresql-client-common_184.pgdg80+1_all.deb dest=/var/cache/apt/archives
+
+  - name: install postgresql-client-common_184.pgdg80+1_all.deb for postgresql 11-7-2017
+    apt: deb=/var/cache/apt/archives/postgresql-client-common_184.pgdg80+1_all.deb state=present
+
+  - name: copy postgresql-common_184.pgdg80+1_all.deb for postgresql 11-7-2017
+    copy: src=/etc/ansible/debian-jessie/postgresql-files/postgresql-common_184.pgdg80+1_all.deb dest=/var/cache/apt/archives
+
+  - name: install postgresql-common_184.pgdg80+1_all.deb for postgresql 11-7-2017
+    apt: deb=/var/cache/apt/archives/postgresql-common_184.pgdg80+1_all.deb state=present
+
+  - name: copy postgresql-client-9.6_9.6.3-1.pgdg80+1_amd64.deb for postgresql 11-7-2017
+    copy: src=/etc/ansible/debian-jessie/postgresql-files/postgresql-client-9.6_9.6.3-1.pgdg80+1_amd64.deb dest=/var/cache/apt/archives
+
+  - name: install postgresql-client-9.6_9.6.3-1.pgdg80+1_amd64.deb for postgresql 11-7-2017
+    apt: deb=/var/cache/apt/archives/postgresql-client-9.6_9.6.3-1.pgdg80+1_amd64.deb state=present
+
+  - name: copy postgresql-9.6_9.6.3-1.pgdg80+1_amd64.deb for postgresql 11-7-2017
+    copy: src=/etc/ansible/debian-jessie/postgresql-files/postgresql-9.6_9.6.3-1.pgdg80+1_amd64.deb dest=/var/cache/apt/archives
+
+  - name: install postgresql-9.6_9.6.3-1.pgdg80+1_amd64.deb for postgresql 11-7-2017
+    apt: deb=/var/cache/apt/archives/postgresql-9.6_9.6.3-1.pgdg80+1_amd64.deb state=present
+
+
+  - name: Final reboot
+    shell: sleep 2 && shutdown -r now "final reboot"
+    async: 1
+    poll: 0
+    ignore_errors: true
