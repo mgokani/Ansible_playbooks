@@ -246,6 +246,7 @@
 
   - name: copy over sudoers to /etc
     copy: src=/etc/ansible/debian-jessie/sudoers dest=/etc/sudoers
+    become: true
 
   - name: start NIS backup now that Oracle has been setup
     command: service nis start
