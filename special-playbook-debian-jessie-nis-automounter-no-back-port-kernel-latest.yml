@@ -52,9 +52,6 @@
   - name: copy over new /etc/group for sudo issuse with Oracle
     copy: src=/etc/ansible/debian-jessie/group dest=/etc/group
 
-  - name: add dns=none to /etc/NetworkManager/NetworkManager.conf to keep NetworkManager from overwriting /etc/resolv.conf
-    lineinfile: dest=/etc/NetworkManager/NetworkManager.conf insertafter="^plugins=ifupdown,keyfile" line="dns=none"
-
   - name: copy /etc/resolv.conf over
     copy: src=/etc/ansible/debian-jessie/resolv.conf dest=/etc/resolv.conf
 
