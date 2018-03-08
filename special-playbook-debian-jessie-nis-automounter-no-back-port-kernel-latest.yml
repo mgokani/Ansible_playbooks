@@ -229,11 +229,11 @@
   - name: create directory using ansible module file for /export/home
     file: path=/export/home state=directory
 
-  - name: add groupadd -g 1000 dba
-    group: name=dba gid=1000 state=present
+  - name: add groupadd -g 1002 dba
+    group: name=dba gid=1002 state=present
 
   - name: creating oracle account and local home directory
-    user: name=oracle group=dba uid=1000 home=/export/home/oracle password=$6$MWT4dtwI$eihgIn2d.E8ngni1rDVasbPU7JLplBNtptVFQbKw0raJBGqh3SomT0tGyBM/2Km2CuO4o3l93B7kcQaBvKtEq. state=present
+    user: name=oracle group=dba uid=1002 home=/export/home/oracle password=$6$MWT4dtwI$eihgIn2d.E8ngni1rDVasbPU7JLplBNtptVFQbKw0raJBGqh3SomT0tGyBM/2Km2CuO4o3l93B7kcQaBvKtEq. state=present
 
   - name: create directory /export/home/oracle/product and make oracle owner and set group to dba
     file: path=/export/home/oracle/product owner=oracle group=dba state=directory
