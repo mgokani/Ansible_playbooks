@@ -41,7 +41,7 @@
     lineinfile: dest=/etc/defaultdomain line="YP.sonusnet.com"
 
   - name: copy over new /etc/auto.master for NIS to work
-    copy: src=/etc/ansible/debian-stretch/auto.master dest=/etc/auto.master
+    copy: src=/etc/ansible/debian-jessie/auto.master dest=/etc/auto.master
 
   - name: add domain YP.sonusnet.com server 10.1.1.6 to /etc/yp.conf
     lineinfile: dest=/etc/yp.conf line="domain YP.sonusnet.com server 10.1.1.6"
@@ -56,7 +56,7 @@
     lineinfile: dest=/etc/NetworkManager/NetworkManager.conf insertafter="^plugins=ifupdown,keyfile" line="dns=none"
 
   - name: copy /etc/resolv.conf over
-    copy: src=/etc/ansible/debian-stretch/resolv.conf dest=/etc/resolv.conf
+    copy: src=/etc/ansible/debian-jessie/resolv.conf dest=/etc/resolv.conf
 
   - name: install build dependencies for package ntp
     apt: name=ntp state=build-dep
