@@ -1,4 +1,4 @@
-- name: install and configure NIS automounter and other items for Debian Stretch
+- name: install and configure NIS automounter and other items for Debian Jessie
   hosts: all
   remote_user: root
 
@@ -17,7 +17,7 @@
     command: apt-get update
 
   - name: copy default domain
-    copy: src=/etc/ansible/debian-stretch/defaultdomain dest=/etc/defaultdomain
+    copy: src=/etc/ansible/debian-jessie/defaultdomain dest=/etc/defaultdomain
 
   - name: install gcc if not already there
     apt: name=gcc state=present
@@ -29,7 +29,7 @@
     apt: name=nis state=present
 
   - name: copy nsswitch.conf over
-    copy: src=/etc/ansible/debian-stretch/nsswitch.conf dest=/etc/nsswitch.conf
+    copy: src=/etc/ansible/debian-jessie/nsswitch.conf dest=/etc/nsswitch.conf
 
   - name: add granite and sapphire2 to /etc/hosts
     lineinfile: dest=/etc/hosts line="10.1.1.32  sapphire2"
