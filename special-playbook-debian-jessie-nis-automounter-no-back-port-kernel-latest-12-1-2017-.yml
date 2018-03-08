@@ -1,11 +1,5 @@
----
-# Notes apt switches present, latest ,absent, build-dep
-# Notes SELINUX switches  enforcing, permissive, disabled
-# Notes service switches  started,stopped,restarted,killed,reloaded,once
-# Notes service more switches enabled "yes or no" whether the serverice should start on boot
-
 - name: install and configure NIS automounter and other items for Debian Stretch
-  hosts: test
+  hosts: all
   remote_user: root
 
   tasks:
@@ -52,8 +46,8 @@
   - name: add domain YP.sonusnet.com server 10.1.1.6 to /etc/yp.conf
     lineinfile: dest=/etc/yp.conf line="domain YP.sonusnet.com server 10.1.1.6"
 
-# - name: change input in /etc/group from 101 to 129 *** this will fix oracle sudo issuse
-#   lineinfile: dest=/etc/group regexp="^input:x:" insertafter=":101" line="input:x:129:"
+  - name: change input in /etc/group from 101 to 129 *** this will fix oracle sudo issuse
+    lineinfile: dest=/etc/group regexp="^input:x:" insertafter=":101" line="input:x:129:"
 
   - name: copy over new /etc/group for sudo issuse with Oracle
     copy: src=/etc/ansible/debian-jessie/group dest=/etc/group
@@ -124,21 +118,15 @@
     - libgpg-error-dev
     - libgpg-error0
     - libglib2.0-0
-#    - libicu57
     - libldap-2.4-2
     - libldap2-dev
     - libltdl7
     - liblzma5
     - libnetfilter-log1
     - libnetfilter-queue1
-#    - libnettle6
-#    - libopenhpi-dev
-#    - libopenhpi3
-#    - libpam0g-dev
     - libpam0g
     - libpcap0.8
     - libpcap0.8-dev
-#    - libpcre3-dev
     - libsctp1
     - libsctp-dev
     - libsqlite3-0
@@ -185,7 +173,6 @@
     - zlib1g
     - zlib1g-dev
     - libgssrpc4
-#    - libkdb5-8
     - krb5-multidev
     - libkrb5-dev
     - libssl-dev
@@ -196,7 +183,6 @@
     - dnsutils
     - rpm
     - g++
-#    - g++-6
     - gawk
     - libnetfilter-log-dev
     - libstdc++5
@@ -263,7 +249,7 @@
   - name: copy over sudoers to /etc
     copy: src=/etc/ansible/debian-jessie/sudoers dest=/etc/sudoers
 
-  - name: start NIS backup now that Orcale has been setup
+  - name: start NIS backup now that Oracle has been setup
     command: service nis start
 
   - name: create the following Oracle directory oraadmin
@@ -289,9 +275,6 @@
 
   - name: create the following directory /export/home/oracle/product/local/network/admin
     file: path=/export/home/oracle/product/local/network/admin owner=oracle group=dba state=directory
-
- # - name: install linux-headers Note this version might change with newer OS "Stretch" releases
- #   apt: name=linux-headers-4.8.0-1-amd64 state=present
 
   - name: run the script dash-to-bash-script , Note this will switch default shell from dash to bash, Note got syntax from Howard 10-14-2016
     script: /etc/ansible/debian-jessie/dash-to-bash-script
@@ -326,16 +309,6 @@
   - name: DOCKER Start the docker daemon
     command: service docker start
 
-# NOTE the below line worked on Deiban Stretch, but on Debian Jessie it give a permission issuse for my account
-#  - name: addng existing users to the group docker in /etc/group,  Giving non-root access to docker so sudo rights are not needed for user accounts in this group
-#    action: user name=erobinson groups="docker" append=yes
-
-#  - name: Install packport kernel 4.8.0
-#    apt:
-#      name: linux-image-4.9.0-0.bpo.2-amd64
-#      default_release: jessie-backports
-#      state: present
-
   - name: copy locale.gen to /etc  This should fix locale issue with PERL  efr 6-26-2017
     copy: src=/etc/ansible/debian-jessie/locale.gen dest=/etc/locale.gen
 
@@ -354,7 +327,6 @@
   - name: install librest-client-perl_273-1_all.deb using local source
     apt: deb=/root/librest-client-perl_273-1_all.deb state=present
 
-# got script from https://deb.nodesource.com/setup_7.x
   - name: run the script /etc/ansible/debian-jessie/nodejs-script-jessie  "This will setup the repos for NodeSource, nodejs"
     script: /etc/ansible/debian-jessie/nodejs-script-jessie
 
