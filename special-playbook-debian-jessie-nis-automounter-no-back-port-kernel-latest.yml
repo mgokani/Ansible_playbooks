@@ -13,8 +13,9 @@
   - name: comment out deb cdrom Official amd64 DVD in /etc/apt/sources.list , then dvd will not be needed to be mounted to install packages
     lineinfile: dest=/etc/apt/sources.list regexp="^deb cdrom:*" insertbefore="^deb cdrom" line="#"
 
-  - name: Run the equivalent of apt-get update
-    command: apt-get update
+  - name: Run the equivalent of "apt-get update"
+    apt: 
+      update_cache: yes
 
   - name: copy default domain
     copy: src=/etc/ansible/debian-jessie/defaultdomain dest=/etc/defaultdomain
@@ -244,9 +245,12 @@
   - name: create symbolic link from 11.2.0 to /home/oraadmin/shared/product/11.2.0
     file: src=/home/oraadmin/shared/product/11.2.0 dest=/export/home/oracle/product/11.2.0 force=yes owner=oracle group=dba state=link
 
+  - file:
+      path: /etc/sudoers
+      mode: 0600
+    
   - name: copy over sudoers to /etc
     copy: src=/etc/ansible/debian-jessie/sudoers dest=/etc/sudoers
-    become: true
 
   - name: start NIS backup now that Oracle has been setup
     command: service nis start
@@ -282,7 +286,8 @@
     file: src=/usr/bin/make dest=/usr/bin/gmake owner=root group=root state=link
 
   - name: DOCKER start of setup --- Run the equivalent of apt-get update
-    command: apt-get update
+    apt: 
+      update_cache: yes
 
   - name: install apt-transport-https ca-certificates for DOCKER install
     apt: name={{item}} state=present
@@ -300,7 +305,8 @@
     lineinfile: dest=/etc/apt/sources.list.d/docker.list line="deb https://apt.dockerproject.org/repo debian-jessie main"
 
   - name: DOCKER start of setup --- Run the equivalent of apt-get update Note this the second run for Docker setup
-    command: apt-get update
+    apt: 
+      update_cache: yes
 
   - name: DOCKER install DOCKER **************
     apt: name=docker-engine state=present
