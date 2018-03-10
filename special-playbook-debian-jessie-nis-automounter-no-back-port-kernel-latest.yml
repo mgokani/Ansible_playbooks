@@ -244,10 +244,6 @@
 
   - name: create symbolic link from 11.2.0 to /home/oraadmin/shared/product/11.2.0
     file: src=/home/oraadmin/shared/product/11.2.0 dest=/export/home/oracle/product/11.2.0 force=yes owner=oracle group=dba state=link
-
-  - file:
-      path: /etc/sudoers
-      mode: 0600
     
   - name: copy over sudoers to /etc
     copy: src=/etc/ansible/debian-jessie/sudoers dest=/etc/sudoers
@@ -327,7 +323,7 @@
     file: path=/export/home/oracle/product/local/rdbms/log owner=oracle group=dba state=directory
 
   - name: copy librest-client-perl_273-1_all.deb to /root on local host
-    copy: src=/root/librest-client-perl_273-1_all.deb  dest=/root
+    copy: src=/etc/ansible/debian-jessie/librest-client-perl_273-1_all.deb  dest=/root
 
   - name: install librest-client-perl_273-1_all.deb using local source
     apt: deb=/root/librest-client-perl_273-1_all.deb state=present
